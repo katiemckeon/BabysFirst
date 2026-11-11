@@ -19,6 +19,7 @@ namespace BabysFirst.EditorTools
         // The scenes that ship, in order. The first one is what the page opens on.
         static readonly string[] Scenes =
         {
+            "Assets/Scenes/Intro.unity",
             "Assets/Scenes/Rehypothecation.unity",
         };
 
