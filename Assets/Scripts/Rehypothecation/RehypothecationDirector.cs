@@ -48,11 +48,6 @@ namespace BabysFirst.Rehypothecation
         public Transform barrowPark;
         public Transform penCenter;
 
-        [Header("Ending")]
-        public GameObject leftBehind;      // IOU scroll + horseshoe, shown once Andreas is gone
-        public GameObject scrollTemplate;  // inactive rigidbody scroll, cloned for the finale
-        public int scrollCount = 28;
-
         [Header("Potatoes")]
         public GameObject potatoPrefab;
         public int potatoesPerPatch = 3;
@@ -78,7 +73,6 @@ namespace BabysFirst.Rehypothecation
             donkeyClick.Clicked += () => donkeyClicked = true;
             barrow.GetComponent<Interactable>().Clicked += () => barrowClicked = true;
             foreach (var p in patches) p.Picked += OnPicked;
-            leftBehind.SetActive(false);
         }
 
         public void Begin() { started = true; }
@@ -204,7 +198,6 @@ namespace BabysFirst.Rehypothecation
 
             // 13-14. So efficient. So collaborative.
             Beat = "finale";
-            StartCoroutine(RainScrolls());
             yield return Say(12);
 
             Beat = "end";
@@ -306,22 +299,10 @@ namespace BabysFirst.Rehypothecation
             }
         }
 
+        // Nothing is left behind: the pen is simply empty.
         void Vanish()
         {
             donkey.gameObject.SetActive(false);
-            leftBehind.SetActive(true);
-        }
-
-        IEnumerator RainScrolls()
-        {
-            for (int i = 0; i < scrollCount; i++)
-            {
-                Vector2 r = UnityEngine.Random.insideUnitCircle * 3f;
-                var pos = penCenter.position + new Vector3(r.x, 4f + UnityEngine.Random.value * 2f, r.y);
-                var scroll = Instantiate(scrollTemplate, pos, UnityEngine.Random.rotation);
-                scroll.SetActive(true);
-                yield return new WaitForSeconds(0.08f);
-            }
         }
 
         static float Flat(Vector3 a, Vector3 b)

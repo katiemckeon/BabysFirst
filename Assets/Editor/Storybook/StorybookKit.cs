@@ -14,11 +14,11 @@ namespace BabysFirst.EditorTools
     {
         public string series = "Baby's First";
         public string title;
-        public string taglinePlain, taglineItalic;
+        public string tagline;       // one italic line on the title page
         public Sprite plate;
-        public string plateCaption;
+        public string runningHead;   // the small tag at the top left during play
 
-        public string chapterNumeral = "1", chapterNumeralCaption;
+        public string chapterNumeral = "1";
         public string chapterLabel, chapterTitle, chapterSummary;
 
         public string endLabel = "The End", endHeading, endBody, endBodyItalic, replayLabel = "Play again";
@@ -134,25 +134,22 @@ namespace BabysFirst.EditorTools
             var picture = Fill("Picture", mask).gameObject.AddComponent<Image>();
             picture.sprite = s.plate;
             picture.raycastTarget = false;
-            Text("PlateCaption", page, 178, 573, 420, 22, LoraItalic, 17, Palette.FadedInk, TextAlignmentOptions.Center, s.plateCaption);
 
             // Right column: the pitch, Play, and how to play.
-            Text("Tagline", page, 662, 318, 460, 38, Lora, 27, Palette.Ink, TextAlignmentOptions.Left, s.taglinePlain);
-            Text("TaglineItalic", page, 662, 356, 460, 38, LoraItalic, 27, Palette.Ink, TextAlignmentOptions.Left, s.taglineItalic);
-            hud.playButton = CutButton("Play", page, 662, 420, 212, 72, "Play");
+            // Everything in this column is centred on x = 847.
+            Text("Tagline", page, 647, 340, 400, 38, LoraItalic, 27, Palette.Ink, TextAlignmentOptions.Center, s.tagline);
+            hud.playButton = CutButton("Play", page, 741, 414, 212, 72, "Play");
 
             // Walk: four outlined keys, W filled marigold.
-            var keys = Box("WalkKeys", page, 662, 518, 68, 44);
+            var keys = Box("WalkKeys", page, 726, 518, 68, 44);
             Key(keys, "W", 23, 0, true); Key(keys, "A", 1, 22, false); Key(keys, "S", 23, 22, false); Key(keys, "D", 45, 22, false);
-            Text("WalkLabel", page, 632, 570, 128, 22, LoraItalic, 17, Palette.Ink, TextAlignmentOptions.Center, "Walk");
+            Text("WalkLabel", page, 696, 570, 128, 22, LoraItalic, 17, Palette.Ink, TextAlignmentOptions.Center, "Walk");
             // Look: mouse with an arrow each side.
-            Paint(Box("LookIcon", page, 770, 528, 71, 34), StorybookSprites.MouseLook, Tint);
-            Text("LookLabel", page, 741, 570, 128, 22, LoraItalic, 17, Palette.Ink, TextAlignmentOptions.Center, "Look");
+            Paint(Box("LookIcon", page, 834, 528, 71, 34), StorybookSprites.MouseLook, Tint);
+            Text("LookLabel", page, 805, 570, 128, 22, LoraItalic, 17, Palette.Ink, TextAlignmentOptions.Center, "Look");
             // Click: mouse with the left button filled marigold.
-            Paint(Box("ClickIcon", page, 939, 528, 24, 34), StorybookSprites.MouseClick, Tint);
-            var click = Row("ClickLabel", page, 871, 570, 160, 22, 5, TextAnchor.MiddleCenter);
-            InlineText("Verb", click, LoraItalic, 17, Palette.Ink, "Click");
-            InlineText("Rest", click, Lora, 17, Palette.Ink, "to do things");
+            Paint(Box("ClickIcon", page, 945, 528, 24, 34), StorybookSprites.MouseClick, Tint);
+            Text("ClickLabel", page, 893, 570, 128, 22, LoraItalic, 17, Palette.Ink, TextAlignmentOptions.Center, "Click");
         }
 
         static void Key(Transform parent, string letter, float x, float y, bool filled)
@@ -174,9 +171,8 @@ namespace BabysFirst.EditorTools
             BorderedPage(page, 36, 36, 1208, 648, Palette.ClothShadow);
             Paint(Box("Gutter", page, 640, 84, 1, 552), null, Palette.Ink); // the fold of the open book
 
-            var numeral = Text("Numeral", page, 138, 110, 400, 380, Black, 330, Palette.Marigold, TextAlignmentOptions.Center, s.chapterNumeral);
+            var numeral = Text("Numeral", page, 138, 170, 400, 380, Black, 330, Palette.Marigold, TextAlignmentOptions.Center, s.chapterNumeral);
             numeral.fontSharedMaterial = numeralOutline;
-            Text("NumeralCaption", page, 88, 498, 500, 40, LoraItalic, 30, Palette.Ink, TextAlignmentOptions.Center, s.chapterNumeralCaption);
 
             RunningHead("Label", page, 672, 214, 540, 20, 15, Palette.HenRed, TextAlignmentOptions.Center, s.chapterLabel);
             Text("Heading", page, 672, 240, 540, 78, ExtraBold, 62, Palette.Ink, TextAlignmentOptions.Center, s.chapterTitle);
@@ -331,7 +327,7 @@ namespace BabysFirst.EditorTools
             cg.padding = new RectOffset(16, 16, 0, 0); cg.childAlignment = TextAnchor.MiddleCenter;
             cg.childControlWidth = cg.childControlHeight = true; cg.childForceExpandWidth = cg.childForceExpandHeight = false;
             chapter.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var tagText = InlineText("Text", chapter, LoraBold, 13, Palette.Ink, (s.chapterLabel + "  ·  " + s.chapterTitle).ToUpperInvariant());
+            var tagText = InlineText("Text", chapter, LoraBold, 13, Palette.Ink, (s.runningHead ?? "").ToUpperInvariant());
             tagText.characterSpacing = 20f;
         }
 
