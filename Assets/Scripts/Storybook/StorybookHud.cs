@@ -18,10 +18,6 @@ namespace BabysFirst.Storybook
         public GameObject promptTag;
         public GameObject promptIcon;
         public TMP_Text promptVerb, promptTarget, promptTail;
-        public GameObject counter;
-        public TMP_Text donkeyNumber, donkeyLabel, promiseNumber, promiseLabel;
-        public TMP_Text note;
-        public float counterTall = 152f, counterShort = 106f;
 
         [Header("Narration strip")]
         public RectTransform narration;
@@ -40,7 +36,6 @@ namespace BabysFirst.Storybook
         void Awake()
         {
             narration.gameObject.SetActive(false);
-            counter.SetActive(false);
             promptTag.SetActive(false);
             chapterCard.SetActive(false);
             pauseMenu.SetActive(false);
@@ -104,21 +99,5 @@ namespace BabysFirst.Storybook
             }
             reticleDot.color = clickable ? Palette.Marigold : Palette.Paper;
         }
-
-        public void SetCounter(int donkeys, int promises, string pencilNote)
-        {
-            counter.SetActive(true);
-            donkeyNumber.text = donkeys.ToString();
-            donkeyLabel.text = donkeys == 1 ? "donkey" : "donkeys";
-            promiseNumber.text = promises.ToString();
-            promiseLabel.text = promises == 1 ? "promise" : "promises";
-            bool hasNote = !string.IsNullOrEmpty(pencilNote);
-            var rt = (RectTransform)counter.transform;
-            rt.sizeDelta = new Vector2(rt.sizeDelta.x, hasNote ? counterTall : counterShort);
-            note.gameObject.SetActive(hasNote);
-            note.text = pencilNote ?? "";
-        }
-
-        public void HideCounter() { counter.SetActive(false); }
     }
 }

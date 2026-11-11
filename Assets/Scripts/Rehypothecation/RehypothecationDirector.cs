@@ -27,7 +27,6 @@ namespace BabysFirst.Rehypothecation
         public float secondsPerWord = 0.36f;
         public float minLineSeconds = 2.5f;
         public float lingerSeconds = 2f;   // extra time a page stays up if nobody presses Space
-        public string pencilNote = "that is too many!";
 
         [Header("Cast")]
         public FarmerController farmer;
@@ -61,7 +60,7 @@ namespace BabysFirst.Rehypothecation
 
         string objVerb, objTarget, objTail;
         bool started, turnPage, donkeyClicked, barrowClicked;
-        int picked, promises, page;
+        int picked, page;
 
         void Awake()
         {
@@ -145,10 +144,8 @@ namespace BabysFirst.Rehypothecation
             donkey.Body("Eat");
             yield return SwingGate(0f);
 
-            // One donkey, one promise: Andreas is now Farmer Tucker's collateral.
+            // Andreas is now Farmer Tucker's collateral.
             Beat = "collateral";
-            promises = 1;
-            ShowCounter();
             yield return Say(2);
 
             // 4. Take the wheelbarrow.
@@ -160,7 +157,7 @@ namespace BabysFirst.Rehypothecation
             Objective(null, null, null);
             yield return Say(3);
 
-            // 5-10. Six patches. The first four each add a promise; Andreas leaves quietly during the third.
+            // 5-10. Six patches, one chain link each. Andreas leaves quietly during the third.
             for (int i = 0; i < patches.Length; i++)
             {
                 Beat = "patch-" + (i + 1);
@@ -169,11 +166,6 @@ namespace BabysFirst.Rehypothecation
                 int need = i + 1;
                 yield return new WaitUntil(() => picked >= need);
                 Objective(null, null, null);
-                if (i < 4)
-                {
-                    promises++;
-                    ShowCounter();
-                }
                 if (i == 2) StartCoroutine(VanishWhenUnseen());
                 yield return Say(4 + i);
             }
@@ -231,11 +223,6 @@ namespace BabysFirst.Rehypothecation
         {
             picked++;
             barrow.Receive(potatoPrefab, patch.transform.position + Vector3.up * 0.3f, potatoesPerPatch, potatoScale);
-        }
-
-        void ShowCounter()
-        {
-            hud.SetCounter(1, promises, promises >= 3 ? pencilNote : null);
         }
 
         // One narration page. It turns on Space, or by itself once it has been up long enough to read.

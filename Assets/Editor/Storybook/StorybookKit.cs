@@ -26,7 +26,7 @@ namespace BabysFirst.EditorTools
 
     /// <summary>
     /// Builds the Storybook UI described in the Storybook UI Guide in design/ onto a
-    /// 1280 x 720 canvas: title page, chapter card, narration strip, prompt tag, counter, pause
+    /// 1280 x 720 canvas: title page, chapter card, narration strip, prompt tag, pause
     /// menu and end page. Sizes below are the guide's design pixels.
     /// </summary>
     public static class StorybookKit
@@ -295,7 +295,7 @@ namespace BabysFirst.EditorTools
             ale.preferredWidth = 7; ale.preferredHeight = 9;
         }
 
-        // ---------------------------------------------------------------- 5. prompt, reticle, counter, chapter tag
+        // ---------------------------------------------------------------- 5. prompt, reticle, running head
 
         static void BuildPlayLayer(StorybookHud hud, Transform root, StorybookSpec s)
         {
@@ -330,28 +330,13 @@ namespace BabysFirst.EditorTools
             hud.promptTarget = InlineText("Target", tag, ExtraBold, 24, Palette.Ink, "Andreas");
             hud.promptTail = InlineText("Tail", tag, Lora, 24, Palette.Ink, "");
 
-            // Counter, top right: 1 donkey (ink) beside N promises (hen red), pencilled note beneath.
-            var counter = new GameObject("Counter", typeof(RectTransform)).GetComponent<RectTransform>();
-            counter.SetParent(layer, false);
-            counter.anchorMin = counter.anchorMax = counter.pivot = new Vector2(1, 1);
-            counter.anchoredPosition = new Vector2(-32, -28); counter.sizeDelta = new Vector2(264, 152);
-            PlainPage(counter);
-            hud.counter = counter.gameObject;
-            hud.donkeyNumber = Text("DonkeyNumber", counter, 16, 4, 110, 70, Black, 60, Palette.Ink, TextAlignmentOptions.Center, "1");
-            hud.donkeyLabel = RunningHead("DonkeyLabel", counter, 16, 74, 110, 18, 13, Palette.Ink, TextAlignmentOptions.Center, "donkey");
-            hud.promiseNumber = Text("PromiseNumber", counter, 138, 4, 110, 70, Black, 60, Palette.HenRed, TextAlignmentOptions.Center, "3");
-            hud.promiseLabel = RunningHead("PromiseLabel", counter, 138, 74, 110, 18, 13, Palette.HenRed, TextAlignmentOptions.Center, "promises");
-            hud.note = Text("PencilNote", counter, 12, 104, 240, 30, Hand, 23, Palette.BluePencil, TextAlignmentOptions.Center, "that is too many!");
-            hud.note.rectTransform.localRotation = Quaternion.Euler(0, 0, 3f);
-
-            // Chapter tag, top left.
+            // Running head, top left: the game's name in Fraunces, as written (no capitals, no tracking).
             var chapter = PlainPage(Box("ChapterTag", layer, 32, 28, 10, 34));
             var cg = chapter.gameObject.AddComponent<HorizontalLayoutGroup>();
             cg.padding = new RectOffset(16, 16, 0, 0); cg.childAlignment = TextAnchor.MiddleCenter;
             cg.childControlWidth = cg.childControlHeight = true; cg.childForceExpandWidth = cg.childForceExpandHeight = false;
             chapter.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var tagText = InlineText("Text", chapter, LoraBold, 13, Palette.Ink, (s.runningHead ?? "").ToUpperInvariant());
-            tagText.characterSpacing = 20f;
+            InlineText("Text", chapter, Bold, 16, Palette.Ink, s.runningHead ?? "");
         }
 
         // ---------------------------------------------------------------- end page
