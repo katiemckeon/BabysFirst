@@ -31,7 +31,7 @@ namespace BabysFirst.Storybook
         public GameObject pauseMenu;
         public Button carryOnButton, restartButton, closeBookButton;
         public GameObject endPage;
-        public Button replayButton;
+        public Button menuButton, replayButton;
 
         void Awake()
         {

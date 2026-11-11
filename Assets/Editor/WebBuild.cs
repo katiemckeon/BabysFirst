@@ -20,6 +20,7 @@ namespace BabysFirst.EditorTools
         static readonly string[] Scenes =
         {
             "Assets/Scenes/Intro.unity",
+            "Assets/Scenes/Menu.unity",
             "Assets/Scenes/Rehypothecation.unity",
         };
 

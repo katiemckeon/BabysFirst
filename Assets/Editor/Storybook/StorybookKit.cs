@@ -1,4 +1,5 @@
-﻿using BabysFirst.Storybook;
+﻿using BabysFirst.Menu;
+using BabysFirst.Storybook;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -21,7 +22,7 @@ namespace BabysFirst.EditorTools
         public string chapterNumeral = "1";
         public string chapterLabel, chapterTitle, chapterSummary;
 
-        public string endLabel = "The End", endHeading, endBody, endBodyItalic, replayLabel = "Play again";
+        public string endLabel = "The End", endHeading, endBody, endBodyItalic, menuLabel = "Main menu", replayLabel = "Play again";
     }
 
     /// <summary>
@@ -111,15 +112,7 @@ namespace BabysFirst.EditorTools
             EnsureFonts();
             StorybookSprites.EnsureAll();
 
-            if (Object.FindAnyObjectByType<EventSystem>() == null)
-                new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-
-            var canvasGo = new GameObject("Storybook", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280, 720); // the guide's canvas, so its pixel sizes apply as written
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand; // the whole 1280 x 720 sheet always fits
+            var canvasGo = NewCanvas("Storybook");
             var hud = canvasGo.AddComponent<StorybookHud>();
             var root = canvasGo.transform;
 
@@ -130,6 +123,65 @@ namespace BabysFirst.EditorTools
             BuildChapterCard(hud, root, spec);
             BuildTitlePage(hud, root, spec); // last sibling draws on top
             return hud;
+        }
+
+        static GameObject NewCanvas(string name)
+        {
+            if (Object.FindAnyObjectByType<EventSystem>() == null)
+                new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            var canvasGo = new GameObject(name, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280, 720); // design pixels apply as written
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand; // the whole 1280 x 720 sheet always fits
+            return canvasGo;
+        }
+
+        // ---------------------------------------------------------------- main menu (contents of the series)
+
+        /// <summary>
+        /// The series' contents page, built from GameCatalog: one column per category, one row per
+        /// game. Games without a scene yet are listed in faded ink and cannot be chosen.
+        /// </summary>
+        public static MainMenu BuildMenu(string series)
+        {
+            EnsureFonts();
+            StorybookSprites.EnsureAll();
+            var canvasGo = NewCanvas("Menu");
+            var menu = canvasGo.AddComponent<MainMenu>();
+            var cloth = Fill("Cloth", canvasGo.transform);
+            Paint(cloth, null, Palette.Cloth, true);
+            var page = Sheet(cloth);
+            BorderedPage(page, 36, 36, 1208, 648, Palette.ClothShadow);
+
+            var title = Text("Series", page, 0, 74, 1280, 96, Black, 84, Palette.Ink, TextAlignmentOptions.Center, series);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            Ornament(page, 640, 190, 150);
+
+            // Two columns of categories, filled left to right, top to bottom.
+            const float colWidth = 500, rowHeight = 50, headHeight = 46, gapBelow = 26;
+            float[] colX = { 110, 670 };
+            float[] colY = { 232, 232 };
+            var entries = new System.Collections.Generic.List<MainMenu.Entry>();
+            foreach (var category in GameCatalog.Categories)
+            {
+                int c = colY[0] <= colY[1] ? 0 : 1;
+                float x = colX[c], y = colY[c];
+                RunningHead("Category " + category.name, page, x + 16, y, colWidth, 20, 15, Palette.HenRed, TextAlignmentOptions.Left, category.name);
+                Paint(Box("Rule", page, x + 16, y + 28, colWidth - 32, 1), null, Palette.Ink);
+                y += headHeight;
+                foreach (var game in category.games)
+                {
+                    bool playable = !string.IsNullOrEmpty(game.scene);
+                    var button = ContentsRow(page, x, y, colWidth, game.title, playable ? "Play" : "soon", playable);
+                    if (playable) entries.Add(new MainMenu.Entry { button = button, scene = game.scene });
+                    y += rowHeight;
+                }
+                colY[c] = y + gapBelow;
+            }
+            menu.entries = entries.ToArray();
+            return menu;
         }
 
         // ---------------------------------------------------------------- 1. title page
@@ -217,15 +269,16 @@ namespace BabysFirst.EditorTools
             RunningHead("Label", panel, 0, 34, 540, 20, 14, Palette.HenRed, TextAlignmentOptions.Center, "The story is resting");
             Text("Heading", panel, 0, 56, 540, 72, ExtraBold, 58, Palette.Ink, TextAlignmentOptions.Center, "Contents");
             Ornament(panel, 270, 146, 90);
-            hud.carryOnButton = ContentsRow(panel, 176, "Carry on", "Esc");
-            hud.restartButton = ContentsRow(panel, 240, "Begin the chapter again", "p. 1");
-            hud.closeBookButton = ContentsRow(panel, 304, "Close the book", "The End");
+            hud.carryOnButton = ContentsRow(panel, 30, 176, 480, "Carry on", "Esc");
+            hud.restartButton = ContentsRow(panel, 30, 240, 480, "Begin the chapter again", "p. 1");
+            hud.closeBookButton = ContentsRow(panel, 30, 304, 480, "Close the book", "Main menu");
         }
 
         // One line of the table of contents: title, dotted leader, right-hand note. Marigold when chosen.
-        static Button ContentsRow(Transform panel, float y, string label, string rightNote)
+        // A row that cannot be chosen is set in faded ink and never highlights.
+        static Button ContentsRow(Transform panel, float x, float y, float width, string label, string rightNote, bool enabled = true)
         {
-            var row = Row("Row " + label, panel, 30, y, 480, 52, 12, TextAnchor.MiddleLeft);
+            var row = Row("Row " + label, panel, x, y, width, 46, 12, TextAnchor.MiddleLeft);
             var group = row.GetComponent<HorizontalLayoutGroup>();
             group.padding = new RectOffset(16, 16, 0, 0);
             var bg = Paint(row, StorybookSprites.Round6, Tint, true);
@@ -236,10 +289,12 @@ namespace BabysFirst.EditorTools
             colors.highlightedColor = Palette.Marigold;
             colors.selectedColor = Palette.Marigold;
             colors.pressedColor = Palette.GoldEdge;
+            colors.disabledColor = Palette.Paper;
             colors.fadeDuration = 0.05f;
             button.colors = colors;
+            button.interactable = enabled;
 
-            InlineText("Label", row, Bold, 24, Palette.Ink, label);
+            InlineText("Label", row, Bold, 24, enabled ? Palette.Ink : Palette.FadedInk, label);
             var leader = new GameObject("Leader", typeof(RectTransform)).GetComponent<RectTransform>();
             leader.SetParent(row, false);
             leader.sizeDelta = new Vector2(0, 4);
@@ -354,7 +409,8 @@ namespace BabysFirst.EditorTools
             var body = Text("Body", layer, 290, 304, 700, 84, Lora, 26, Palette.Ink, TextAlignmentOptions.Top, s.endBody);
             body.lineSpacing = 18f;
             Text("BodyItalic", layer, 290, 400, 700, 40, LoraItalic, 26, Palette.Ink, TextAlignmentOptions.Center, s.endBodyItalic);
-            hud.replayButton = FlatButton("Replay", layer, 530, 482, 220, 58, s.replayLabel);
+            hud.menuButton = FlatButton("Menu", layer, 410, 482, 220, 58, s.menuLabel);
+            hud.replayButton = FlatButton("Replay", layer, 650, 482, 220, 58, s.replayLabel, true);
         }
 
         // ---------------------------------------------------------------- panels and buttons
@@ -410,11 +466,12 @@ namespace BabysFirst.EditorTools
         }
 
         /// <summary>A button over the game: flat marigold, 6 px corners, 4 px darker gold edge underneath.</summary>
-        public static Button FlatButton(string name, Transform parent, float x, float y, float w, float h, string label)
+        /// A secondary button is light paper on a tan edge instead.
+        public static Button FlatButton(string name, Transform parent, float x, float y, float w, float h, string label, bool secondary = false)
         {
             var rt = Box(name, parent, x, y, w, h);
-            Paint(Fill("Edge", rt, 0, 4, 0, -4), StorybookSprites.Round6, Palette.GoldEdge);
-            var face = Paint(Fill("Face", rt), StorybookSprites.Round6, Palette.Marigold, true);
+            Paint(Fill("Edge", rt, 0, 4, 0, -4), StorybookSprites.Round6, secondary ? Palette.TanEdge : Palette.GoldEdge);
+            var face = Paint(Fill("Face", rt), StorybookSprites.Round6, secondary ? Palette.PaperLight : Palette.Marigold, true);
             Type(Fill("Label", rt, 0, 0, 0, 2), Bold, 28, Palette.Ink, TextAlignmentOptions.Center, label);
             var b = rt.gameObject.AddComponent<Button>();
             b.targetGraphic = face;

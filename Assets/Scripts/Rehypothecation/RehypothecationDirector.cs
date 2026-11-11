@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using BabysFirst.Menu;
 using BabysFirst.Storybook;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -68,7 +69,8 @@ namespace BabysFirst.Rehypothecation
             hud.replayButton.onClick.AddListener(() => Reload(false));
             hud.carryOnButton.onClick.AddListener(() => SetPaused(false));
             hud.restartButton.onClick.AddListener(() => Reload(true));
-            hud.closeBookButton.onClick.AddListener(() => Reload(false));
+            hud.closeBookButton.onClick.AddListener(BackToMenu);
+            hud.menuButton.onClick.AddListener(BackToMenu);
             donkeyClick.Clicked += () => donkeyClicked = true;
             barrow.GetComponent<Interactable>().Clicked += () => barrowClicked = true;
             foreach (var p in patches) p.Picked += OnPicked;
@@ -82,6 +84,15 @@ namespace BabysFirst.Rehypothecation
             Time.timeScale = 1f;
             skipTitleOnce = skipTitle;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        // Back to the series' contents page. Falls back to this game's own title page when the
+        // menu scene is not in the build (for example, playing this scene alone).
+        public void BackToMenu()
+        {
+            Time.timeScale = 1f;
+            if (Application.CanStreamedLevelBeLoaded(GameCatalog.MenuScene)) SceneManager.LoadScene(GameCatalog.MenuScene);
+            else Reload(false);
         }
 
         public void SetPaused(bool on)
