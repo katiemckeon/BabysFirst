@@ -64,6 +64,24 @@ namespace BabysFirst.EditorTools
             return "Storybook fonts ready";
         }
 
+        // Printable ASCII plus the typographic marks the storybook uses. Text outside this set
+        // will not render; add the character here and run RebakeFonts.
+        static string BakedCharacters()
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int c = 32; c <= 126; c++) sb.Append((char)c);
+            foreach (int c in new[] { 0x2018, 0x2019, 0x201C, 0x201D, 0x2013, 0x2014, 0x2026, 0x00B7, 0x00E9 }) sb.Append((char)c);
+            return sb.ToString();
+        }
+
+        /// <summary>Delete and re-create every Storybook font asset (after changing fonts or the baked character set).</summary>
+        public static string RebakeFonts()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("SDF", new[] { FontFolder }))
+                AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid));
+            return EnsureFonts() + " (rebaked; rebuild the scenes that use them)";
+        }
+
         static TMP_FontAsset Font(string name)
         {
             string sdf = FontFolder + "/" + name + " SDF.asset";
@@ -71,7 +89,12 @@ namespace BabysFirst.EditorTools
             if (fa != null) return fa;
             var ttf = AssetDatabase.LoadAssetAtPath<Font>(FontFolder + "/" + name + ".ttf");
             if (ttf == null) throw new System.Exception("Missing font file: " + FontFolder + "/" + name + ".ttf");
-            fa = TMP_FontAsset.CreateFontAsset(ttf, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024, AtlasPopulationMode.Dynamic, true);
+            // Bake a fixed character set once and freeze the atlas. A dynamic atlas rewrites the
+            // asset file whenever new text is displayed, which shows up as a change in every commit.
+            fa = TMP_FontAsset.CreateFontAsset(ttf, 72, 7, GlyphRenderMode.SDFAA, 1024, 1024, AtlasPopulationMode.Dynamic, false);
+            if (!fa.TryAddCharacters(BakedCharacters(), out string missing))
+                Debug.LogWarning(name + " has no glyph for: " + missing);
+            fa.atlasPopulationMode = AtlasPopulationMode.Static;
             AssetDatabase.CreateAsset(fa, sdf);
             fa.material.name = name + " SDF Material";
             fa.atlasTexture.name = name + " SDF Atlas";

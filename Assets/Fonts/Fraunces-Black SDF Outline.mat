@@ -25,7 +25,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 3344891892997915705, guid: ab94758d06d4f5347a4fd770eb6a6845, type: 2}
+        m_Texture: {fileID: -7890992507035039913, guid: ab94758d06d4f5347a4fd770eb6a6845, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -33,15 +33,15 @@ Material:
     - _ColorMask: 15
     - _CullMode: 0
     - _FaceDilate: 0
-    - _GradientScale: 10
+    - _GradientScale: 8
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
     - _OutlineWidth: 0.09
     - _PerspectiveFilter: 0.875
-    - _ScaleRatioA: 0.9
+    - _ScaleRatioA: 0.875
     - _ScaleRatioB: 1
-    - _ScaleRatioC: 0.73125
+    - _ScaleRatioC: 0.7109375
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
