@@ -33,6 +33,11 @@ unity build . --target WebGL --execute-method BabysFirst.EditorTools.WebBuild.Bu
 The build lands in `Builds/Web/` (git-ignored) and is ready to serve from GitHub Pages: copy its
 contents to the branch or folder that Pages publishes.
 
+```
+cd Builds/Web
+python -m http.server 8000
+```
+
 ## Licences
 
 Code in this repository: not yet licensed for reuse. Fonts in `Assets/Fonts/` are under the SIL
