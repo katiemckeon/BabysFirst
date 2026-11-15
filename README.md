@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.svg">
+    <img src=".github/assets/hero.svg" alt="pot pie labs" width="420">
+  </picture>
+</p>
+
 # Baby's First
 
 A series of toddler-toy-styled 3D picture books that explain grown-up technical concepts with
