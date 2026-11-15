@@ -11,10 +11,8 @@ name: Web build
 # Pages must be set to "Source: GitHub Actions" (Settings > Pages).
 
 on:
-  # Turned off for now: the build fails until the secrets above are set up.
-  # Uncomment to build on every push to main again.
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -40,7 +38,8 @@ jobs:
           ssh-private-key: ${{ secrets.ASSETS_DEPLOY_KEY }}
       - name: Fetch asset packs (private submodule)
         run: |
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          # Send only the assets repo over SSH (the deploy key opens nothing else).
+          git config --global url."git@github.com:katiemckeon/BabysFirst-assets".insteadOf "https://github.com/katiemckeon/BabysFirst-assets"
           git submodule update --init --depth 1 Assets/ThirdParty
 
       - uses: actions/cache@v4
@@ -58,6 +57,9 @@ jobs:
           targetPlatform: WebGL
           buildMethod: BabysFirst.EditorTools.WebBuild.Build
           allowDirtyBuild: true
+          # Number builds by run, so the builder does not need to fetch git history for a version.
+          versioning: Custom
+          version: 0.1.${{ github.run_number }}
 
       # Upload only the player. Never upload the project folder: it contains the asset packs.
       - uses: actions/upload-pages-artifact@v3
