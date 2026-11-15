@@ -188,7 +188,6 @@ namespace BabysFirst.Rehypothecation
             yield return new WaitUntil(() => Flat(farmer.transform.position, barrowPark.position) < 3.5f);
             Objective(null, null, null);
             barrow.ParkAt(barrowPark.position, barrowPark.rotation);
-            yield return Say(10);
 
             // 12. Go and get Andreas.
             Beat = "collect-donkey";
@@ -197,16 +196,16 @@ namespace BabysFirst.Rehypothecation
             Objective("Go and get", "Andreas", null);
             yield return new WaitUntil(() => Flat(farmer.transform.position, penCenter.position) < 2.6f);
             Objective(null, null, null);
-            yield return Say(11);
+            yield return Say(10);
 
-            // 13-14. So efficient. So collaborative.
+            // 13-14. So collaborative.
             Beat = "finale";
-            yield return Say(12);
+            yield return Say(11);
 
             Beat = "end";
             farmer.SetControls(false);
             hud.ShowEnd();
-            if (voice != null && lines[13].clip != null) voice.PlayOneShot(lines[13].clip);
+            if (voice != null && lines[12].clip != null) voice.PlayOneShot(lines[12].clip);
         }
 
         void Update()
