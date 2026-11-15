@@ -1,0 +1,96 @@
+# Developer commands for Baby's First. Needs Task (https://taskfile.dev); run `task` for the list.
+# Keys are read from .env at the repo root (see .env.example).
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  PROJECT_VERSION:
+    sh: cat ProjectSettings/ProjectVersion.txt
+  UNITY_VERSION: '{{regexFind `[0-9]+\.[0-9]+\.[0-9]+[a-z][0-9]+` .PROJECT_VERSION}}'
+  # Unity Hub's default install location; set UNITY_EDITOR (environment or .env) if yours differs.
+  UNITY_DEFAULT: >-
+    {{if eq OS "windows"}}C:/Program Files/Unity/Hub/Editor/{{.UNITY_VERSION}}/Editor/Unity.exe
+    {{- else if eq OS "darwin"}}/Applications/Unity/Hub/Editor/{{.UNITY_VERSION}}/Unity.app/Contents/MacOS/Unity
+    {{- else}}{{.HOME}}/Unity/Hub/Editor/{{.UNITY_VERSION}}/Editor/Unity{{end}}
+  UNITY: '{{.UNITY_EDITOR | default .UNITY_DEFAULT}}'
+  SUBMODULES: Assets/ThirdParty Tools
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  build:
+    desc: Make the web version (Builds/Web). The Unity Editor must be closed.
+    preconditions: &unity-ready
+      - sh: test -f "{{.UNITY}}"
+        msg: 'Unity {{.UNITY_VERSION}} not found at "{{.UNITY}}". Install it with Unity Hub, or set UNITY_EDITOR in .env.'
+      - sh: test -f Assets/ThirdParty/README.md
+        msg: 'The asset packs are missing. Run: task submodule:init'
+      - sh: test ! -f Temp/UnityLockfile
+        msg: 'The project is open in the Unity Editor. Close it first (or use Baby''s First > Build Web in the Editor).'
+    cmds:
+      - echo "Building with Unity {{.UNITY_VERSION}}; this takes a few minutes. Log is Logs/web-build.log"
+      - >-
+        "{{.UNITY}}" -batchmode -quit -projectPath . -buildTarget WebGL
+        -executeMethod BabysFirst.EditorTools.WebBuild.Build -logFile Logs/web-build.log
+        || { tail -n 40 Logs/web-build.log; echo "Build failed. Full log is Logs/web-build.log"; exit 1; }
+      - echo "Done. Run 'task up' to try it."
+
+  check:
+    desc: Open every scene and report missing scripts and broken references. Editor must be closed.
+    preconditions: *unity-ready
+    cmds:
+      - >-
+        "{{.UNITY}}" -batchmode -quit -projectPath .
+        -executeMethod BabysFirst.EditorTools.ProjectCheck.Run -logFile Logs/project-check.log
+        || { echo "Problems found. Search Logs/project-check.log for [ProjectCheck]"; exit 1; }
+      - echo "Project check passed."
+
+  up:
+    desc: Serve the web build at http://localhost:8000 (PORT=9000 task up for another port).
+    vars:
+      PORT: '{{.PORT | default "8000"}}'
+    preconditions:
+      - sh: test -f Builds/Web/index.html
+        msg: 'There is no web build yet. Run: task build'
+    cmds:
+      - echo "Serving on http://localhost:{{.PORT}} (Ctrl+C to stop)"
+      - python -m http.server {{.PORT}} --directory Builds/Web
+
+  submodule:init:
+    desc: Check out the two private submodules and the Git LFS files.
+    cmds:
+      - git lfs install --local
+      - git submodule update --init --recursive
+      - git lfs pull
+
+  submodule:sync:
+    desc: 'Move both private submodules to the tip of a branch: task submodule:sync -- main'
+    vars:
+      BRANCH: '{{.CLI_ARGS | default "main"}}'
+    cmds:
+      - for: { var: SUBMODULES }
+        cmd: git -C {{.ITEM}} fetch origin && git -C {{.ITEM}} checkout {{.BRANCH}} && git -C {{.ITEM}} pull --ff-only origin {{.BRANCH}}
+      - git status --short -- {{.SUBMODULES}}
+      - echo "If a submodule is listed above, it moved or has local changes. Commit it when you are ready; nothing was committed for you."
+
+  claude:
+    desc: 'Hand a request to a Claude skill from Tools/: task claude -- muse transfer takes'
+    env:
+      REQUEST: '{{.CLI_ARGS}}'
+    preconditions:
+      - sh: test -n "$REQUEST"
+        msg: 'Say which skill and what to do, for example: task claude -- muse transfer takes'
+      - sh: test -d Tools/.claude/skills
+        msg: 'The tools submodule is missing. Run: task submodule:init'
+      - sh: command -v claude
+        msg: 'Claude Code is not installed (https://claude.com/claude-code).'
+      - sh: test -n "$ELEVENLABS_API_KEY"
+        msg: 'ELEVENLABS_API_KEY must be set. Copy .env.example to .env and fill it in.'
+    cmds:
+      # The first word names the skill (Tools/.claude/skills/<name>); the rest is the request.
+      # Pre-approved: that one skill, reading files, and running node scripts that live in Tools/.
+      - claude -p "/$REQUEST" --add-dir Tools --allowedTools "Skill(${REQUEST%% *})" "Bash(node Tools/*)" "PowerShell(node Tools/*)" Read Glob Grep

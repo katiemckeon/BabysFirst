@@ -20,17 +20,20 @@ Have you ever felt frustrated by:
 
 Two private submodules are required (audio generation, private AI workflows, and third party assets). The commands below assume you have access to them.
 
-Requirements: Taskfile, Unity `6000.6.8f1` (web builder), Musehub, MuseScore, Claude Code.
+Requirements: [Task](https://taskfile.dev), Git LFS, Unity `6000.6.8f1` (web builder), Node, Python, Musehub, MuseScore, Claude Code.
+
+`task claude` needs an ElevenLabs key: copy `.env.example` to `.env` and fill in `ELEVENLABS_API_KEY`. `ANTHROPIC_API_KEY` is optional; without it Claude Code uses your signed-in account.
 
 ### Taskfile commands
 
 Each command stands alone. Run whichever one you need:
 
 ```bash
-task build                        # make the web version
-task up                           # serve locally
-task submodule:sync -- main       # update private submodules
-task claude muse transfer takes   # transform local takes into game narration
+task build                           # make the web version
+task up                              # serve locally
+task check                           # look for broken references in every scene
+task submodule:sync -- main          # update private submodules
+task claude -- muse transfer takes   # transform local takes into game narration
 ```
 
 ### Starting fresh 
@@ -40,8 +43,8 @@ Run these in order:
 ```bash
 git clone git@github.com:katiemckeon/BabysFirst.git
 cd BabysFirst
-task submodule:init   # check out the private submodules
-task build            # make the web version
+task submodule:init
+task build
 ```
 
 ## Licences
