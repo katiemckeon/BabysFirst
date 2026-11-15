@@ -1,0 +1,16 @@
+{
+  "stsPreset": "multi-default",
+  "voice": {
+    "name": "HungarianSocialite",
+    "id": "mRYrN5wUlNgE8rgvgzzY"
+  },
+  "seed": 1234,
+  "note": "THE NARRATION PRESET. Chosen 2026-11-14: sounds right on HungarianSocialite. (The English model is what mangled the r's.)",
+  "model": "eleven_multilingual_sts_v2",
+  "settings": {
+    "stability": 0.5,
+    "similarity_boost": 0.75,
+    "style": 0,
+    "use_speaker_boost": true
+  }
+}

@@ -332,22 +332,7 @@ namespace BabysFirst.EditorTools
             pageNo.anchorMin = pageNo.anchorMax = pageNo.pivot = new Vector2(0, 0);
             pageNo.anchoredPosition = new Vector2(hud.narrationPadX, 10); pageNo.sizeDelta = new Vector2(200, 20);
             hud.pageNumber = Type(pageNo, LoraItalic, 15, Palette.FadedInk, TextAlignmentOptions.Left, "page 1");
-
-            var turn = new GameObject("TurnThePage", typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
-            turn.SetParent(strip, false);
-            turn.anchorMin = turn.anchorMax = turn.pivot = new Vector2(1, 0);
-            turn.anchoredPosition = new Vector2(-hud.narrationPadX, 10); turn.sizeDelta = new Vector2(300, 20);
-            var g = turn.GetComponent<HorizontalLayoutGroup>();
-            g.childAlignment = TextAnchor.MiddleRight; g.spacing = 7;
-            g.childControlWidth = g.childControlHeight = true; g.childForceExpandWidth = g.childForceExpandHeight = false;
-            var space = InlineText("Key", turn, LoraBold, 13, Palette.FadedInk, "SPACE");
-            space.characterSpacing = 20f;
-            InlineText("Hint", turn, LoraItalic, 15, Palette.FadedInk, "turn the page");
-            var arrow = new GameObject("Arrow", typeof(RectTransform)).GetComponent<RectTransform>();
-            arrow.SetParent(turn, false);
-            Paint(arrow, StorybookSprites.Arrow, Palette.HenRed);
-            var ale = arrow.gameObject.AddComponent<LayoutElement>();
-            ale.preferredWidth = 7; ale.preferredHeight = 9;
+            // No "turn the page" hint: narration pages turn themselves when the narrator finishes.
         }
 
         // ---------------------------------------------------------------- 5. prompt, reticle, running head

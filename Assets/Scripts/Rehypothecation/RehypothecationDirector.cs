@@ -13,7 +13,7 @@ namespace BabysFirst.Rehypothecation
     {
         public string id;
         [TextArea(2, 4)] public string text;
-        public AudioClip clip; // optional; pages are timed from the text until VO exists
+        public AudioClip clip; // the page stays up until it finishes; without one, timed from the text
     }
 
     /// <summary>
@@ -24,10 +24,11 @@ namespace BabysFirst.Rehypothecation
     {
         [Header("Narration (order matters)")]
         public NarrationLine[] lines;
-        public AudioSource voice;          // optional
+        public AudioSource voice;          // the narrator
+        // Timing for any line that has no recording yet.
         public float secondsPerWord = 0.36f;
         public float minLineSeconds = 2.5f;
-        public float lingerSeconds = 2f;   // extra time a page stays up if nobody presses Space
+        public float lingerSeconds = 2f;
 
         [Header("Cast")]
         public FarmerController farmer;
@@ -100,6 +101,7 @@ namespace BabysFirst.Rehypothecation
             if (Beat == "title" || Beat == "chapter" || Beat == "end") return;
             Paused = on;
             Time.timeScale = on ? 0f : 1f;
+            if (voice != null) { if (on) voice.Pause(); else voice.UnPause(); }
             farmer.SetControls(!on);
             hud.ShowPause(on);
         }
@@ -205,7 +207,7 @@ namespace BabysFirst.Rehypothecation
             Beat = "end";
             farmer.SetControls(false);
             hud.ShowEnd();
-            if (voice != null && lines[12].clip != null) voice.PlayOneShot(lines[12].clip);
+            if (voice != null && lines[12].clip != null) { voice.clip = lines[12].clip; voice.Play(); }
         }
 
         void Update()
@@ -235,29 +237,25 @@ namespace BabysFirst.Rehypothecation
             barrow.Receive(potatoPrefab, patch.transform.position + Vector3.up * 0.3f, potatoesPerPatch, potatoScale);
         }
 
-        // One narration page. It turns on Space, or by itself once it has been up long enough to read.
+        // One narration page. With a recording it stays up until the narrator has finished; without
+        // one, for as long as it takes to read. The player can't skip it.
         IEnumerator Say(int index)
         {
             var line = lines[index];
             page++;
             hud.Say(line.text, page);
-            float seconds;
             if (voice != null && line.clip != null)
             {
-                voice.PlayOneShot(line.clip);
-                seconds = line.clip.length + 0.3f;
+                voice.clip = line.clip;
+                voice.Play();
+                // isPlaying is false while the pause menu has the voice paused, so hold on Paused too.
+                while (voice.isPlaying || Paused) yield return null;
+                yield return new WaitForSeconds(0.3f);
             }
             else
             {
                 int words = line.text.Split(' ').Length;
-                seconds = Mathf.Max(minLineSeconds, words * secondsPerWord) + lingerSeconds;
-            }
-            turnPage = false;
-            for (float t = 0f; t < seconds; t += Time.deltaTime)
-            {
-                if (turnPage && t > 0.4f) break;
-                turnPage = false;
-                yield return null;
+                yield return new WaitForSeconds(Mathf.Max(minLineSeconds, words * secondsPerWord) + lingerSeconds);
             }
             hud.Hush();
             yield return new WaitForSeconds(0.35f);
