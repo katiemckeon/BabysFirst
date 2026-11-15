@@ -1,0 +1,73 @@
+name: Web build
+
+# Builds the WebGL player with GameCI and publishes it to GitHub Pages.
+#
+# Repository secrets this needs (Settings > Secrets and variables > Actions):
+#   UNITY_LICENSE      contents of the Unity licence file (.ulf) from a machine where Unity Hub is signed in
+#   UNITY_EMAIL        Unity account e-mail
+#   UNITY_PASSWORD     Unity account password
+#   ASSETS_DEPLOY_KEY  private half of a read-only deploy key added to the private assets repo
+#
+# Pages must be set to "Source: GitHub Actions" (Settings > Pages).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # Only the asset packs are needed to build. The tools submodule is never fetched here.
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ASSETS_DEPLOY_KEY }}
+      - name: Fetch asset packs (private submodule)
+        run: |
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          git submodule update --init --depth 1 Assets/ThirdParty
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-WebGL-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-WebGL-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+          buildMethod: BabysFirst.EditorTools.WebBuild.Build
+          allowDirtyBuild: true
+
+      # Upload only the player. Never upload the project folder: it contains the asset packs.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: Builds/Web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,3 +1,6 @@
 [submodule "Assets/ThirdParty"]
 	path = Assets/ThirdParty
 	url = https://github.com/katiemckeon/BabysFirst-assets.git
+[submodule "Tools"]
+	path = Tools
+	url = https://github.com/katiemckeon/PotPieTools.git
