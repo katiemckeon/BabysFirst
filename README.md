@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.svg">
-    <img src=".github/assets/hero.svg" alt="pot pie labs" width="420">
-  </picture>
+  <img src=".github/assets/hero.svg" alt="pot pie labs" width="420">
 </p>
 
 # Baby's First

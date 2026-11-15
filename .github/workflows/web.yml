@@ -11,8 +11,10 @@ name: Web build
 # Pages must be set to "Source: GitHub Actions" (Settings > Pages).
 
 on:
-  push:
-    branches: [main]
+  # Turned off for now: the build fails until the secrets above are set up.
+  # Uncomment to build on every push to main again.
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 permissions:
