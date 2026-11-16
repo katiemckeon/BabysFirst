@@ -31,6 +31,7 @@ Each command stands alone. Run whichever one you need:
 ```bash
 task build                           # make the web version
 task up                              # serve locally
+task publish                         # build, then put it on GitHub Pages
 task check                           # look for broken references in every scene
 task submodule:sync -- main          # update private submodules
 task claude -- muse transfer takes   # transform local takes into game narration

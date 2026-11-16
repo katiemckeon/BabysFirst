@@ -60,6 +60,45 @@ tasks:
       - echo "Serving on http://localhost:{{.PORT}} (Ctrl+C to stop)"
       - python -m http.server {{.PORT}} --directory Builds/Web
 
+  publish:
+    desc: Build the web version and put it on GitHub Pages (the gh-pages branch).
+    preconditions:
+      - &clean-tree
+        sh: test -z "$(git status --porcelain)"
+        msg: 'There are uncommitted changes. Commit (or stash) them first, so the published game matches a commit.'
+      - &on-main
+        sh: git fetch -q origin main && test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+        msg: 'This commit is not the tip of main on GitHub. Push (or pull) first, so the published game matches main.'
+    cmds:
+      - task: build
+      - task: publish:push
+
+  publish:push:
+    desc: Put the existing Builds/Web on GitHub Pages without rebuilding.
+    vars:
+      COMMIT:
+        sh: git rev-parse --short HEAD
+      ORIGIN:
+        sh: git remote get-url origin
+      REMOTE: '{{.PUBLISH_REMOTE | default .ORIGIN}}'
+      SITE: git -C Builds/Web -c core.autocrlf=false
+    preconditions:
+      - *clean-tree
+      - *on-main
+      - sh: test -f Builds/Web/index.html
+        msg: 'There is no web build yet. Run: task publish'
+    cmds:
+      # gh-pages holds only the latest build, as a single commit that is replaced each time,
+      # so the repository does not grow by 20 MB per publish. Nothing here goes through Git LFS.
+      # The build folder becomes a throwaway repository of its own for the length of the push.
+      - rm -rf Builds/Web/.git
+      - '{{.SITE}} init -q -b gh-pages'
+      - '{{.SITE}} add -A'
+      - '{{.SITE}} commit -q -m "Publish {{.COMMIT}}"'
+      - '{{.SITE}} push -q -f "{{.REMOTE}}" gh-pages'
+      - rm -rf Builds/Web/.git
+      - echo "Published {{.COMMIT}}. GitHub Pages updates in a minute or two."
+
   submodule:init:
     desc: Check out the two private submodules and the Git LFS files.
     cmds:

@@ -2,6 +2,12 @@ name: Web build
 
 # Builds the WebGL player with GameCI and publishes it to GitHub Pages.
 #
+# NOT IN USE. The game is published from a developer machine with `task publish`, which pushes
+# the build to the gh-pages branch. This workflow is kept for a later retry and only runs when
+# started by hand: on a standard GitHub-hosted runner the Unity build runs out of memory
+# ("The hosted runner lost communication with the server", November 2026). Before using it
+# again, give it a larger or self-hosted runner and switch Pages back to "Source: GitHub Actions".
+#
 # Repository secrets this needs (Settings > Secrets and variables > Actions):
 #   UNITY_LICENSE      contents of the Unity licence file (.ulf) from a machine where Unity Hub is signed in
 #   UNITY_EMAIL        Unity account e-mail
@@ -11,8 +17,6 @@ name: Web build
 # Pages must be set to "Source: GitHub Actions" (Settings > Pages).
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
